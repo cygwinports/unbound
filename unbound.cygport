@@ -1,0 +1,117 @@
+inherit python2 python3
+
+NAME="unbound"
+VERSION=1.6.2
+RELEASE=1
+CATEGORY="Libs"
+SUMMARY="DNS resolver"
+DESCRIPTION="Unbound is a validating, recursive, and caching DNS resolver.
+Unbound is designed as a set of modular components, so that also DNSSEC
+validation and stub-resolvers (that do not run as a server, but are linked
+into an application) are easily possible."
+HOMEPAGE="http://www.unbound.net/"
+SRC_URI="
+	http://www.unbound.net/downloads/unbound-${VERSION}.tar.gz
+	fedora/root.anchor
+	fedora/icannbundle.pem
+"
+PATCH_URI="
+	1.6.2-resolvconf-cygwin.patch
+	1.6.2-shmget-cygwin.patch
+	1.6.2-testsuite-cygwin.patch
+	1.6.2-vpath.patch
+"
+
+PKG_NAMES="${NAME} lib${NAME}2 lib${NAME}-common lib${NAME}-devel python2-${NAME} python3-${NAME}"
+unbound_CATEGORY="Net"
+unbound_CONTENTS="
+	usr/sbin/unbound*
+	usr/share/man/man1/*
+	usr/share/man/man8/*
+	var/run/${NAME}
+"
+libunbound2_REQUIRES="libunbound-common"
+libunbound2_CONTENTS="usr/bin/cygunbound-2.dll"
+libunbound_common_CONTENTS="
+	etc/defaults/etc/${NAME}/
+	etc/defaults/var/lib/${NAME}/
+	etc/postinstall/${NAME}.sh
+	etc/preremove/${NAME}.sh
+	usr/share/doc/${NAME}/
+	usr/share/man/man5/*
+"
+libunbound_devel_CONTENTS="
+	usr/include/unbound*.h
+	usr/lib/libunbound.dll.a
+	usr/lib/pkgconfig/libunbound.pc
+	usr/share/man/man3/*
+"
+python2_unbound_CONTENTS="${PYTHON2_SITELIB#/}/*"
+python3_unbound_CONTENTS="${PYTHON3_SITELIB#/}/*"
+
+DIFF_EXCLUDES="ltmain.sh"
+
+CPPFLAGS+=" -DFD_SETSIZE=1024"
+LIBS=-liphlpapi
+CYGCONF_ARGS="
+	--enable-shared --disable-static
+	--disable-flto
+	--with-libevent
+	--with-pthreads
+	--with-conf-file=/etc/${NAME}/unbound.conf
+	--with-pidfile=/var/run/${NAME}/unbound.pid
+	--with-rootkey-file=/var/lib/${NAME}/root.key
+	LEX=:
+"
+
+src_compile() {
+	cd ${S}
+	cygautoreconf
+
+	mkdir -p ${B}/lib-only
+	cd ${B}/lib-only
+	lndirs ${S}
+	cygconf \
+		--with-nettle \
+		--with-libunbound-only
+	cygmake
+
+	mkdir -p ${B}/py2
+	cd ${B}/py2
+	lndirs ${S}
+	cygconf \
+		--with-ssl \
+		--with-pythonmodule --with-pyunbound \
+		 PYTHON=${PYTHON2} PYTHON_LDFLAGS=${LIBPYTHON2##* }
+	cygmake
+
+	mkdir -p ${B}/py3
+	cd ${B}/py3
+	lndirs ${S}
+	cygconf \
+		--with-ssl \
+		--with-pythonmodule --with-pyunbound \
+		PYTHON=${PYTHON3} PYTHON_LDFLAGS=${LIBPYTHON3##* }
+	cygmake
+}
+
+src_install() {
+	cd ${B}/py2
+	cyginstall
+
+	cd ${B}/py3
+	cyginstall
+
+	cd ${B}/lib-only
+	cyginstall unbound-event-install
+	dopkgconfig contrib/libunbound.pc
+
+	insinto /etc/${NAME}
+	doins ${S}/icannbundle.pem
+
+	insinto /var/lib/${NAME}
+	newins ${S}/root.anchor root.key
+
+	make_etc_defaults /etc/${NAME} /var/lib/${NAME}
+	keepdir /var/run/${NAME}
+}

@@ -1,0 +1,11 @@
+--- origsrc/unbound-1.6.2/Makefile.in	2017-03-21 07:08:17.000000000 -0500
++++ src/unbound-1.6.2/Makefile.in	2017-05-02 03:29:54.562416000 -0500
+@@ -493,7 +493,7 @@ pythonmod-install:
+ 
+ pyunbound-install:
+ 	$(INSTALL) -m 755 -d $(DESTDIR)$(PYTHON_SITE_PKG)
+-	$(INSTALL) -c -m 644 $(srcdir)/libunbound/python/unbound.py $(DESTDIR)$(PYTHON_SITE_PKG)/unbound.py
++	$(INSTALL) -c -m 644 libunbound/python/unbound.py $(DESTDIR)$(PYTHON_SITE_PKG)/unbound.py
+ 	$(LIBTOOL) --mode=install cp _unbound.la $(DESTDIR)$(PYTHON_SITE_PKG)
+ 	$(LIBTOOL) --mode=finish $(DESTDIR)$(PYTHON_SITE_PKG)
+ 

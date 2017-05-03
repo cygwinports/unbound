@@ -1,0 +1,27 @@
+--- origsrc/unbound-1.6.2/smallapp/unbound-control.c	2017-04-11 08:37:39.000000000 -0500
++++ src/unbound-1.6.2/smallapp/unbound-control.c	2017-05-02 02:25:52.443333700 -0500
+@@ -68,6 +68,11 @@
+ #endif
+ #ifdef HAVE_SYS_SHM_H
+ #include "sys/shm.h"
++#ifndef SHM_R
++#include <sys/stat.h>
++#define SHM_R S_IRUSR|S_IRGRP|S_IROTH
++#define SHM_W S_IWUSR|S_IWGRP|S_IWOTH
++#endif
+ #endif
+ #ifdef HAVE_SYS_UN_H
+ #include <sys/un.h>
+--- origsrc/unbound-1.6.2/util/shm_side/shm_main.c	2017-04-12 10:01:11.000000000 -0500
++++ src/unbound-1.6.2/util/shm_side/shm_main.c	2017-05-02 02:02:17.720319200 -0500
+@@ -47,6 +47,10 @@
+ #endif
+ #ifdef HAVE_SYS_SHM_H
+ #include <sys/shm.h>
++#ifndef SHM_R
++#include <sys/stat.h>
++#define SHM_R S_IRUSR|S_IRGRP|S_IROTH
++#endif
+ #endif
+ #include <sys/time.h>
+ #include <errno.h>

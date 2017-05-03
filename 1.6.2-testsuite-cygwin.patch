@@ -1,0 +1,11 @@
+--- origsrc/unbound-1.6.2/testcode/unitldns.c	2015-03-26 05:21:38.000000000 -0500
++++ src/unbound-1.6.2/testcode/unitldns.c	2017-05-02 03:36:18.151155700 -0500
+@@ -213,6 +213,8 @@ rr_tests(void)
+ void
+ ldns_test(void)
+ {
++#ifndef __CYGWIN__
+ 	unit_show_feature("sldns");
+ 	rr_tests();
++#endif
+ }

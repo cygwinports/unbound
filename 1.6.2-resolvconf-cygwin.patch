@@ -1,0 +1,38 @@
+--- origsrc/unbound-1.6.2/libunbound/libunbound.c	2017-04-06 08:13:06.000000000 -0500
++++ src/unbound-1.6.2/libunbound/libunbound.c	2017-05-02 10:21:56.184047100 -0500
+@@ -73,7 +73,7 @@
+ #include <time.h>
+ #endif
+ 
+-#if defined(UB_ON_WINDOWS) && defined (HAVE_WINDOWS_H)
++#if defined(UB_ON_WINDOWS) && defined (HAVE_WINDOWS_H) || defined(__CYGWIN__)
+ #include <windows.h>
+ #include <iphlpapi.h>
+ #endif /* UB_ON_WINDOWS */
+@@ -1051,9 +1051,11 @@ ub_ctx_resolvconf(struct ub_ctx* ctx, co
+ 	int r;
+ 
+ 	if(fname == NULL) {
+-#if !defined(UB_ON_WINDOWS) || !defined(HAVE_WINDOWS_H)
+ 		fname = "/etc/resolv.conf";
+-#else
++	}
++	in = fopen(fname, "r");
++	if(!in) {
++#if defined(UB_ON_WINDOWS) || defined(HAVE_WINDOWS_H) || defined(__CYGWIN__)
+ 		FIXED_INFO *info;
+ 		ULONG buflen = sizeof(*info);
+ 		IP_ADDR_STRING *ptr;
+@@ -1087,11 +1089,7 @@ ub_ctx_resolvconf(struct ub_ctx* ctx, co
+ 			return UB_NOERROR;
+ 		}
+ 		free(info);
+-		return UB_READFILE;
+-#endif /* WINDOWS */
+-	}
+-	in = fopen(fname, "r");
+-	if(!in) {
++#endif
+ 		/* error in errno! perror(fname) */
+ 		return UB_READFILE;
+ 	}
